@@ -1,0 +1,1 @@
+(time sh Task2_1M.sh) 2> runTime_1M.txt

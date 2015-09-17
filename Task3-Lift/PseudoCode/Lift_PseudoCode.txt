@@ -1,0 +1,218 @@
+PseudoCode for Task3 - Calculate Lift
+---------------------------------------
+
+lift(AB) = P(A|B)/P(A)
+		 = (n(A&B)/n(B))/(n(A)/#users)
+
+<---> = TAB
+
+*************************************************************************
+Step1:
+input: ratings.dat/u.data file
+output: UserId <---> MovieID1 <---> MovieID2 ...
+
+Mapper1 - UserMovieMap.py
+---------------------------
+
+let map(k,v) = 
+	foreach line in stdin:
+		Split line into data (userid, movieid and rating)
+		if (rating >= 4.0):
+			emit(userid, movieid)
+
+Output:UserId <---> MovieID
+
+Reducer1 - UserMovieReduce.py
+-------------------------------
+let reduce(k,vals) = 
+	foreach line in stdin:
+		yeild a generator by splitting on "\t"
+	Groupby userid
+		emit(userid, tab seperated list of movies rated by the user)
+
+Output:UserId <---> MovieID1 <---> MovieID2 ...
+*************************************************************************
+
+Step2:
+input: UserId <---> MovieID1 <---> MovieID2 ...
+output: MovieID1 <---> MovieID2 <---> Total_Occurrence
+
+Mapper2 - MoviePairMap.py
+--------------------------
+let map(k,v) = 
+	foreach line in stdin:
+		data = split the line on TAB
+		remove the first element from data (since its userid)
+		sort the data
+		data_len = len(data)
+		for mov1 in range(1 upto data_len - 1)
+			for mov2 in range(mov1 + 1 upto data_len)
+				emit(mov1, mov2, 1)
+
+Output:MovieID1 <---> MovieID2 <---> 1
+
+Reducer2 - MoviePairReduce.py
+-------------------------------
+prevKey = null
+let reduce(k, vals) = 
+	foreach line in stdin:
+		data = split the line on TAB
+		currentKey = first 2 vals of data i.e "data[0] data[1]"
+		count = data[2]
+		
+		if (prevKey and currentKey != prevKey):
+			emit(prevKey, total)
+			prevKey = currentKey
+			total = count
+		else:
+			prevKey = currentKey
+			total += count
+
+	# emit last key
+	if prevKey:
+		emit(prevKey, total)
+
+Output:MovieID1 <---> MovieID2 <---> Total_Occurrence
+
+*************************************************************************
+
+Step3: Get the total occurrence of movie which are highly rated. This will be used as n(A) and n(B) in the formula for lift
+
+input: ratings.dat/u.data file
+output: movieID <---> Total_Occurrence_Count
+
+Mapper3 - HighRatedMovieOccurMap.py
+------------------------------------
+
+dictionary highRatedMovieCount = new dictionary()
+
+let map(k,v) = 
+	foreach line in stdin:
+		Split line into data (userid, movieid and rating)
+		if (rating >= 4.0):
+			addToDictionary(movieid)
+emitHighRatedMovieOccurrences()
+
+let addToDictionary(movieid):
+	if !(movieid in dictioanry highRatedMovieCount):
+		add it to dictionary highRatedMovieCount
+	else:
+		highRatedMovieCount[word] = highRatedMovieCount[word] + 1
+
+let emitHighRatedMovieOccurrences():
+	foreach movieid in dictioanry highRatedMovieCount:
+		nOCuurrence = highRatedMovieCount[movieid]
+		emit(movieid, nOCuurrence)
+
+Output: movieID <---> Occurrence_Count
+
+Reducer3 - HighRatedMovieOccurReduce.py
+----------------------------------------
+
+prevMovieID = null
+nTotalOccurrence = 0
+
+let reduce(k, vals) = 
+	foreach line in stdin:
+		Split line into data (movieid, count)		
+		if (prevMovieID and currentMovieID != prevMovieID):
+			emit(prevMovieID, total)
+			prevMovieID = currentMovieID
+			total = count
+		else:
+			prevMovieID = currentMovieID
+			total += count
+
+	# emit last key
+	if prevMovieID:
+		emit(prevMovieID, total)
+
+Output: movieID <---> Total_Occurrence_Count
+
+*************************************************************************
+
+Step4: Get the total number of users who have rated the movies highly
+
+input: ratings.dat/u.data file
+output: #users
+
+Mapper4 - UserListMap.py
+-------------------------
+dictionary Users = new dictionary()
+let map(k,v) = 
+	foreach line in stdin:
+		Split line into data (userid)
+		userid = data[0]
+		if userid not in dictionary Users:
+			add it to the dictionary Users
+
+	foreach userid in Users dictionary:
+		emit(userid)
+
+Reducer4 - UserListReduce.py
+-----------------------------
+let reduce(k, vals) = 
+	foreach line in stdin:
+		currentUser = line
+		if prevUser != currentUser):
+			nTotal = nTotal + 1
+		prevUser = currentUser
+	emit(nTotal)
+
+Output:#users
+
+*************************************************************************
+
+Step5: Calculate lift
+
+input: a)Output from Step2
+	   b)Output from Step3
+	   c)Output from Step4
+	   d)movies.dat/u.item file
+
+Mapper5 - CalcLiftMap.py
+-------------------------
+input: Output fro Step2: MovieID1 <---> MovieID2 <---> Total_Occurrence
+let map(k,v) = 
+	foreach line in stdin:
+		Split line into data (movieid1, movieid2 and nTotalOccurence)
+		emit(movieid1, movieid2, nTotalOccurence)
+
+Reducer5 - CalcLiftReduce.py
+-----------------------------
+dictionary movieNameDictionary = new dictionary()
+let initializeMovieNames() = 
+	open(movies.dat) file
+	foreach line in file:
+		Split line into data (movieid, and moviename)
+		movieNameDictionary[movieid] = moviename
+
+dictionary highRatedMovieDictionary = new dictionary()
+let initializeHighRatings()=
+	open(step3 output file) file
+	foreach line in file:
+		Split line into data (movieid, and count)
+		highRatedMovieDictionary[movieid] = count
+
+TotalUsers=0
+let initializeTotalUsers()=
+	open(userCount file)
+	read the line
+	TotalUsers = line
+		
+let reduce(k, vals) = 
+	initializeMovieNames()
+	initializeHighRatings()
+	initializeTotalUsers()
+	
+	foreach line in stdin:
+		Split line into data (movieid1, movieid2, and nCoOcuurence)		
+		nMovie1Occurrence = highRatedMovieDictionary[movieid1]
+		nMovie2Occurrence = highRatedMovieDictionary[movieid2]
+		
+		lift = (nCoOcuurence * TotalUsers) / (nMovie1Occurrence * nMovie2Occurrence)
+		
+		if lift >= 1.5:
+			emit(lift, movieName1, movieName2)
+			
+*************************************************************************

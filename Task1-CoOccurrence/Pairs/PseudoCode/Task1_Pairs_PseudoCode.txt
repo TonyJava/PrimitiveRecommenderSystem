@@ -1,0 +1,81 @@
+PseudoCode for Task1 - Pairs Approach
+--------------------------------------
+
+<---> = TAB
+
+*************************************************************************
+
+Mapper1
+--------
+let map(k,v) = 
+	foreach line in stdin:
+		Split line into data to get userID,movieID, rating
+		if (rating >= 4):
+			emit(userid, movieid)
+
+Output:UserId <---> MovieID
+
+Reducer1
+---------
+let reduce(k,vals) = 
+	foreach line in stdin:
+		yeild a generator by splitting on "\t"
+	Groupby userid
+		emit(userid, tab seperated list of movies rated by the user)
+
+Output:UserId <---> MovieID1 <---> MovieID2 ...
+
+*************************************************************************
+
+Mapper2
+--------
+let map(k,v) = 
+	foreach line in stdin:
+		data = split the line on TAB
+		remove the first element from data (since its userid)
+		sort the data
+		data_len = len(data)
+		for mov1 in range(1 upto data_len - 1)
+			for mov2 in range(mov1 + 1 upto data_len)
+				emit("LongValueSum:" + mov1 + TAB + mov2 + TAB + 1)
+
+Output:MovieID1 <---> MovieID2 <---> 1
+
+Reducer2
+---------
+Use the in-built aggregate reducer "LongValueSum"
+
+let reduce(k, vals) = 
+	sum = 0
+	foreach int v in vals:
+		sum += v
+	emit(k, sum)
+
+Output:MovieID1 <---> MovieID2 <---> #Occurrences
+
+*************************************************************************
+
+Mapper3
+--------
+let map(k,v) = 
+	movie_names = INITIALIZE movie names dictionary from "movies.dat"
+	foreach line in stdin:
+		data = split the line on TAB to get movieID1, movieID2, cooccurrence_Count
+		occurrences = data[2]
+		mov1 = movie_names(data[0])
+		mov2 = movie_names(data[1])
+		emit(occurrences, mov1, mov2)
+
+Output:#Occurrences <---> MovieName1 <---> MovieName2
+
+Reducer3
+---------
+Use the in-built IdentityReducer
+
+let reduce(k, vals)
+	foreach v in vals:
+		emit(k,v)
+
+Output:#Occurrences <---> MovieName1 <---> MovieName2
+
+*************************************************************************

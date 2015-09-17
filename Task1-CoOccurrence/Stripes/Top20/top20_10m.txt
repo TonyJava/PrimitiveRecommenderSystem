@@ -1,0 +1,20 @@
+Silence of the Lambs, The (1991)	Shawshank Redemption, The (1994)	16786
+Silence of the Lambs, The (1991)	Pulp Fiction (1994)	16752
+Shawshank Redemption, The (1994)	Pulp Fiction (1994)	16529
+Star Wars: Episode V - The Empire Strikes Back (1980)	Star Wars: Episode IV - A New Hope (a.k.a. Star Wars) (1977)	14832
+Forrest Gump (1994)	Shawshank Redemption, The (1994)	14455
+Pulp Fiction (1994)	Usual Suspects, The (1995)	14231
+Star Wars: Episode VI - Return of the Jedi (1983)	Star Wars: Episode IV - A New Hope (a.k.a. Star Wars) (1977)	14208
+Schindler's List (1993)	Shawshank Redemption, The (1994)	14073
+Silence of the Lambs, The (1991)	Forrest Gump (1994)	13920
+Shawshank Redemption, The (1994)	Usual Suspects, The (1995)	13729
+Silence of the Lambs, The (1991)	Fugitive, The (1993)	13440
+Silence of the Lambs, The (1991)	Schindler's List (1993)	13371
+Shawshank Redemption, The (1994)	Braveheart (1995)	13156
+Silence of the Lambs, The (1991)	Usual Suspects, The (1995)	13087
+Forrest Gump (1994)	Pulp Fiction (1994)	13009
+Fugitive, The (1993)	Shawshank Redemption, The (1994)	12799
+Star Wars: Episode VI - Return of the Jedi (1983)	Star Wars: Episode V - The Empire Strikes Back (1980)	12789
+Raiders of the Lost Ark (Indiana Jones and the Raiders of the Lost Ark) (1981)	Star Wars: Episode IV - A New Hope (a.k.a. Star Wars) (1977)	12479
+Schindler's List (1993)	Pulp Fiction (1994)	12450
+Silence of the Lambs, The (1991)	Braveheart (1995)	12380

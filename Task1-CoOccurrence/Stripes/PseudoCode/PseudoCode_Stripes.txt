@@ -1,0 +1,81 @@
+PseudoCode for Task1 - Stripes Approach
+--------------------------------------
+
+<---> = TAB
+
+*************************************************************************
+Step1
+
+Mapper1
+--------
+input: ratings.dat
+
+highRatedUserMovies = new dictionary()
+let map(k,v) = 
+	foreach line in stdin:
+		Split line into data to get userID,movieID, rating
+		If rating >= 4:
+			add the movie to list of movies highly rated by the userID in dictionary highRatedUserMovies
+
+	emit (userID, listofmovies) for each user
+
+Output:UserId <---> MovieID <---> MovieID2 ...
+
+Reducer1
+---------
+prevUserID = null
+userMovieList = new list()
+
+let reduce(k,vals) = 
+	foreach line in stdin:
+		Split line into a list by TAB
+		currUserID = Pop the first item (UserID) from the list
+		movielistTemp = all items except the first (since its already popped)
+		if prevUserID != null and prevUserID != currUserID:
+			emit(tab seperated userMovieList)
+			empty the userMovieList
+		add movielistTemp to userMovieList
+	emit(tab seperated userMovieList) for last entry
+
+Output: MovieID <---> MovieID2 ...
+
+*************************************************************************
+Step2
+
+Mapper2
+--------
+input: Step1 output
+
+let map(k,v) = 
+	foreach line in stdin:
+		Split line into a list by TAB
+		while the list is not empty:
+			emit(list)
+			Pop first item from the list
+
+			
+Reducer1
+---------
+prevMovie = null
+dictCoOccurrence = new dictionary()
+
+let reduce(k,vals) = 
+	foreach line in stdin:
+		Split line into a list by TAB
+		currMovieId = Pop the first item(MovieID) from the list
+		movielistTemp = all items except the first (since its already popped)
+		if prevMovie != null and prevMovie != currUserID:
+			foreach key in  dictCoOccurrence:
+				split the key on ','
+				emit(movie1, movie2, CoOccurrence_Count)
+			Empty dictCoOccurrence
+		prevMovie = currMovieId
+		while the movielistTemp is not empty:
+			key = currMovieId + ',' + movielistTemp[i]
+			add the key to the dictCoOccurrence and increment its count
+	foreach key in  dictCoOccurrence:
+		split the key on ','
+		emit(movie1, movie2, CoOccurrence_Count)
+
+Output: MovieID1 <---> MovieID2 <---> CoOccurrence_Count
+*************************************************************************

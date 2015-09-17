@@ -1,0 +1,115 @@
+PseudoCode for Task2 - Conditional Probability
+-----------------------------------------------
+
+<---> = TAB
+
+*************************************************************************
+
+Mapper1
+--------
+let map(k,v) = 
+	foreach line in stdin:
+		data = split the line on "\t" or "::"
+		userid = data[0]
+		movieid = data[1]
+		rating = data[2]
+		if (rating >= 4):
+			emit(userid, movieid)
+
+Output:UserId <---> MovieID
+
+Reducer1
+---------
+let reduce(k,vals) = 
+	foreach line in stdin:
+		yeild a generator by splitting on "\t"
+	Groupby userid
+		emit(userid, tab seperated list of movies rated by the user)
+
+Output:UserId <---> MovieID1 <---> MovieID2 ...
+
+*************************************************************************
+
+Mapper2
+--------
+let map(k,v) = 
+	foreach line in stdin:
+		data = split the line on TAB
+		remove the first element from data (since its userid)
+		sort the data
+		data_len = len(data)
+		for mov1 in range(1 upto data_len - 1)
+			for mov2 in range(mov1 + 1 upto data_len)
+				emit(mov1, mov2, 1)
+				emit(mov1, "*", 1)
+
+Output:MovieID1 <---> MovieID2 <---> 1
+
+Reducer2
+---------
+prevKey = null
+let reduce(k, vals) = 
+	totalMov1 = 0
+	
+	foreach line in stdin:
+		data = split the line on TAB
+		currentKey = first 2 vals of data i.e "data[0] data[1]"
+		count = data[2]
+		
+		if (prevKey and currentKey != prevKey):
+			if (second part of the prevKey != "*"):
+				condProb = total/totalMov1
+				if (condProb > 0.8):
+					emit(prevKey, condProb)
+			else:
+				# for handling  "*" key
+				totalMov1 = total
+			prevKey = currentKey
+			total = count
+		else:
+			prevKey = currentKey
+			total += count
+
+	# emit last key
+	if prevKey:
+		condProb = total/totalMov1
+		if (condProb > 0.8):
+			emit(prevKey, condProb)
+
+Output:MovieID1 <---> MovieID2 <---> P(B|A)
+
+*************************************************************************
+
+Mapper3
+--------
+
+Note: 
+For Mapper3 input:
+There is only going to be a single MovieID1 <---> MovieID2 <---> P(B|A)
+
+let map(k,v) = 
+	movie_names = INITIALIZE movie names dictionary from "movies.dat"
+	foreach line in stdin:
+		data = split the line on TAB
+		condProb = data[2]
+		mov1 = movie_names(data[0])
+		mov2 = movie_names(data[1])
+		emit(condProb, mov1, mov2)
+
+Output:#P(B|A) <---> MovieName1 <---> MovieName2
+
+Note: 
+For Reducer3 input:
+There is only going to be a single MovieID1 <---> MovieID2 <---> P(B|A)
+
+Reducer3
+---------
+Use the in-built IdentityReducer
+
+let reduce(k, vals)
+	foreach v in vals:
+		emit(k,v)
+
+Output:#P(B|A) <---> MovieName1 <---> MovieName2
+
+*************************************************************************

@@ -1,0 +1,150 @@
+PseudoCode for Task4 - SON Algorithm
+---------------------------------------
+
+<---> = TAB
+
+*************************************************************************
+Step1:
+input: ratings.dat/u.data file
+output: UserId <---> MovieID1 <---> MovieID2 ...
+
+Mapper1 - UserMovieMap.py
+---------------------------
+
+let map(k,v) = 
+	foreach line in stdin:
+		Split line into data (userid, movieid and rating)
+		if (rating >= 4.0):
+			emit(userid, movieid)
+
+Output:UserId <---> MovieID
+
+Reducer1 - UserMovieReduce.py
+-------------------------------
+let reduce(k,vals) = 
+	foreach line in stdin:
+		yeild a generator by splitting on "\t"
+	Groupby userid
+		emit(tab seperated list of movies rated by the user)
+
+Output:MovieID1 <---> MovieID2 ...
+
+*************************************************************************
+Step2:
+input: Step1 output
+
+Mapper2 - apriori_Map.py
+---------------------------
+minSupport = 1500
+frequentItemSets = new dictionary
+transactionList = new list
+frequentSet = new Set
+
+
+let map(k,v) = 
+	foreach line in stdin:
+		add line to transaction list
+		Split into single value transactions
+		foreach single transaction:
+			add it to a frequentSet
+	
+	itemGroupSize = 1
+    stoppingCondition = False
+    
+	generate all combinations of frequentSet
+	
+	while !stoppingCondition:
+		candidateSet = generateCandidates() from frequentSet and itemGroupSize
+		candidateSetFrequency = getFrequency() of candidateSet depending upon transactionList and itemGroupSize
+		frequentSet = generateFrequentSet() from candidateSetFrequency depending upon minSupport
+		
+		if frequentSet is empty:
+			stoppingCondition = true
+		else:
+			frequentItemSets[itemGroupSize] = frequentSet
+            frequentSet = set of keys in frequentSet
+		itemGroupSize += 1
+	
+	finalOutput = new dictionary
+	foreach key,value in frequentItemSets:
+		foreach k,v in value:
+			add to finalOutput comma-seperated keys
+	
+	sort the finalOutput in reverse order
+	
+	foreach value in finalOutput:
+		foreach item in value:
+			emit(item, frequency)
+			
+Reducer2 - apriori_Reduce.py
+------------------------------
+frequentSet = new set
+dictFreqSets = new dictionary
+let reduce(k,vals) = 
+	foreach line in stdin:
+		split line into data(freequentItem, count)
+		add freequentItem to frequentSet
+		add freequentItem and its count to dictionary dictFreqSets
+
+foreach key in dictFreqSets:
+	emit(comma-seperated frequent item, count of that frequent items)
+*************************************************************************
+
+Step2: SON 
+input: Step1 output
+	   Step2 output as candidate itemsets
+	 
+Mapper3 - SON_Map.py
+---------------------------	 
+lstBasket = new list
+dictCandidates = new dictionary
+
+let initializeCandidates()=
+	open candidate itemsets file which was generated in step2
+	foreach line in file:
+		split the line into data(freqItems, itemsCount)
+		foreach item in freqItems:
+			add it to CandidateSet 
+		
+		add the CandidateSet to dictionary with value 0(zero)
+		
+let readBaskets() = 
+	foreach line in stdin:
+		split the line into movieIds
+		save each movieId in a set of baskets
+		add this set of baskets to lstBasket
+		
+let calcCandidateCounts() = 
+	foreach candidate in dictCandidates:
+		foreach setBasket in lstBasket:
+			check if current candidate is in basket:
+				if yes then increment the count of that candidate in dictCandidates
+let emitData() = 
+	foreach candidate in dictCandidates:
+		emit(comma-seperated candidtates, and their counts)
+		
+let map(k, v)=
+	initializeCandidates()
+    readBaskets()
+    calcCandidateCounts()
+    emitData()
+
+Reducer3 - SON_Reduce.py
+---------------------------	
+threshold = 1400
+finalOutput = new dictionary 
+let reduce(k, vals)=
+	foreach line in stdin:
+		split the line into data(candidateSet, and count)
+		add to finalOutput dictionary with its count (if already in dictionary then increments the value by count)
+		
+foreach key in finalOutput:
+	if the value for that key is less than threshold:
+		then ignore
+	else:
+		split the key into movieIds
+		foreach movie in movieIds:
+			emit(movieName)
+		emit(support count)
+		
+*************************************************************************
